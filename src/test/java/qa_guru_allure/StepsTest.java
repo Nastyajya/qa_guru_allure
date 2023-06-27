@@ -4,48 +4,45 @@ import com.codeborne.selenide.logevents.SelenideLogger;
 import io.qameta.allure.selenide.AllureSelenide;
 import org.junit.jupiter.api.Test;
 
-import static com.codeborne.selenide.Condition.exist;
-import static com.codeborne.selenide.Selectors.byTagAndText;
-import static com.codeborne.selenide.Selectors.withText;
+import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.open;
 import static io.qameta.allure.Allure.step;
+import static org.openqa.selenium.By.linkText;
 
 
 public class StepsTest {
-    private static final String REPOSITORY = "Selenide/";
-    private static final String ISSUE = "issue";
+    private static final String REPOSITORY = "selenide/selenide";
+    private static final int ISSUE = 2336;
+    private static final String ISSUENAME = "Authentication issue";
 
     @Test
     public void testLambdaStep() {
         SelenideLogger.addListener("allure", new AllureSelenide());
-
-        step("Открываеи главную мтраницу", () -> {
-        open("https://github.com/");
+        step("Открываем главную страницу", () -> {
+            open("https://github.com/");
         });
-
         step("Ищем репозиторий" + REPOSITORY, () -> {
-        $(".header-search-input").click();
-        $(".header-search-input").sendKeys(REPOSITORY);
-        $(".header-search-input").submit();
+            $(".header-search-input").setValue("selenide/selenide").submit();
+            $(linkText("selenide/selenide")).click();
         });
-        step("Кликаем по ссылке репозитория" + REPOSITORY, () -> {
-        $(byTagAndText("a", REPOSITORY));
+        step("Переходим на вкладку issue", () -> {
+            $("#issues-tab").click();
         });
-        step("Проверяем наличие текста issue", () -> {
-        $(withText(ISSUE)).should(exist);
+        step("Проверяем что issue с номером" + ISSUE + "отображает название" + ISSUENAME, () -> {
+            $("#issue_" + ISSUE + "_link").shouldHave(text(ISSUENAME));
         });
     }
 
     @Test
-    public void testAnnotatedStep() {
-        WebSteps steps = new WebSteps();
+    void testAnnotatedSteps() {
+        WebSteps webSteps = new WebSteps();
         SelenideLogger.addListener("allure", new AllureSelenide());
-
-        steps.openMainPage();
-        steps.searchForRepository(REPOSITORY);
-        steps.clickOnRepositoryText(REPOSITORY);
-        steps.shouldSeeIssue(ISSUE);
-
+        webSteps
+                .openMainPage()
+                .searchForRepository(REPOSITORY)
+                .clickOnRepository(REPOSITORY)
+                .clickIssueTab()
+                .checkIssue(ISSUE, ISSUENAME);
     }
 }
